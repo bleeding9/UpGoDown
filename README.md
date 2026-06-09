@@ -76,6 +76,10 @@ docker compose up --build
 Сейчас API использует **собственный JWT** (`POST /register`, `POST /login`).  
 **Keycloak** поднят в Docker (порт 8180) для соответствия стеку курса; интеграция с API — опционально, на защите достаточно показать JWT + Keycloak в compose.
 
+## Допуск к защите (скриншоты)
+
+Чеклист: Docker, Swagger, Seq, Keycloak — см. **[docs/DOPUSK-skreens.md](docs/DOPUSK-skreens.md)**
+
 ## Git
 
 ```powershell
