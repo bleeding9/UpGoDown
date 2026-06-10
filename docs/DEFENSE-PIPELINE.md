@@ -17,21 +17,7 @@ docker compose up --build -d
 
 ---
 
-## 1. Тесты (показать первым)
-
-```powershell
-dotnet test UpGoDown.sln
-```
-
-Или двойной клик **`ЗАПУСК_ТЕСТЫ.bat`**.
-
-**Сказать:** «Unit-тесты GameEngine — уровень 1, враг на ур. 3, скилл диагонали».
-
-Папка: `tests/UpGoDown.Api.Tests/GameEngineTests.cs`
-
----
-
-## 2. Миграции БД
+## 1. Миграции БД
 
 При старте API автоматически: `db.Database.Migrate()`.
 
@@ -48,7 +34,7 @@ SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
 
 ---
 
-## 3. Docker Compose
+## 2. Docker Compose
 
 ```powershell
 docker compose up --build -d
@@ -65,7 +51,7 @@ docker ps
 
 ---
 
-## 4. DBeaver
+## 3. DBeaver
 
 Подключение: `localhost:5432`, db/user/pass = `upgodown`
 
@@ -75,7 +61,7 @@ docker ps
 
 ---
 
-## 5. Postman — register и login
+## 4. Postman — register и login
 
 Импорт: **`docs/UpGoDown.postman_collection.json`**
 
@@ -94,7 +80,7 @@ docker ps
 
 ---
 
-## 6. Swagger — сценарии ролей
+## 5. Swagger — сценарии ролей
 
 ### Роль Student (игрок)
 
@@ -114,7 +100,7 @@ Authorize → token **teacher**
 
 ---
 
-## 7. Serilog / Seq — TraceId
+## 6. Serilog / Seq — TraceId
 
 1. Сделать несколько запросов в Swagger/Postman
 2. Открыть http://localhost:5341
@@ -123,7 +109,7 @@ Authorize → token **teacher**
 
 ---
 
-## 8. Keycloak
+## 7. Keycloak
 
 http://localhost:8180 → admin / admin → скрин консоли.
 
@@ -131,7 +117,7 @@ http://localhost:8180 → admin / admin → скрин консоли.
 
 ---
 
-## 9. Стабильность
+## 8. Стабильность
 
 - Не вызывать методы без token там, где нужен Bearer
 - `/levels/{id}/try` — только роль **Student**
@@ -139,7 +125,7 @@ http://localhost:8180 → admin / admin → скрин консоли.
 
 ---
 
-## 10. GitHub
+## 9. GitHub
 
 https://github.com/bleeding9/UpGoDown
 
