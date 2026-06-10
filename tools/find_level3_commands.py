@@ -1,12 +1,58 @@
-"""BFS: winning commands for level 3 (seed, enemy, HP) — mirrors GameEngine + LevelScenarioService."""
-from collections import deque
+"""System.Random — same algorithm as C# for matching LevelScenarioService."""
 import json
-import random
+from collections import deque
 from pathlib import Path
 
 W, H = 14, 8
 DELTA = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}
 ANGLES = [0, 90, 180, 270]
+
+
+class DotNetRandom:
+    MBIG = 2147483647
+    MSEED = 161803398
+
+    def __init__(self, seed: int):
+        self.seed_array = [0] * 56
+        self.inext = 0
+        self.inextp = 21
+        subtraction = self.MSEED - abs(seed)
+        self.seed_array[55] = subtraction
+        mj = 1 if subtraction >= 0 else -1
+        for i in range(1, 55):
+            ii = (21 * i) % 55
+            self.seed_array[ii] = mj
+            mj = subtraction - mj
+            if mj < 0:
+                mj += self.MBIG
+            subtraction = self.seed_array[ii]
+        for _ in range(1, 5):
+            for i in range(1, 56):
+                self.seed_array[i] -= self.seed_array[1 + (i + 30) % 55]
+                if self.seed_array[i] < 0:
+                    self.seed_array[i] += self.MBIG
+
+    def _sample(self) -> float:
+        loc_inext = self.inext + 1
+        loc_inextp = self.inextp + 1
+        if loc_inext >= 56:
+            loc_inext = 1
+        if loc_inextp >= 56:
+            loc_inextp = 1
+        ret_val = self.seed_array[loc_inext] - self.seed_array[loc_inextp]
+        if ret_val == self.MBIG:
+            ret_val -= 1
+        if ret_val < 0:
+            ret_val += self.MBIG
+        self.seed_array[loc_inext] = ret_val
+        self.inext = loc_inext
+        self.inextp = loc_inextp
+        return ret_val * (1.0 / self.MBIG)
+
+    def next(self, max_value: int) -> int:
+        if max_value <= 0:
+            raise ValueError("max_value must be positive")
+        return int(self._sample() * max_value)
 
 
 def norm(a):
@@ -40,14 +86,16 @@ def nearest_chair(pos, a, b):
 
 
 def build_level3(seed: int):
-    rng = random.Random(seed)
+    rng = DotNetRandom(seed)
     cells = [(x, y) for x in range(W) for y in range(H)]
-    rng.shuffle(cells)
+    for i in range(len(cells) - 1, 0, -1):
+        j = rng.next(i + 1)
+        cells[i], cells[j] = cells[j], cells[i]
     spawn = cells[0]
     c1, c2 = cells[1], cells[2]
     enemy = cells[3]
     own, partner = nearest_chair(spawn, c1, c2)
-    angle = rng.choice(ANGLES)
+    angle = ANGLES[rng.next(len(ANGLES))]
     return spawn, own, partner, enemy, angle
 
 
@@ -146,29 +194,21 @@ def apply(cmd, state, own, partner, diagonal_skill):
 def after_enemy(state):
     px, py, angle, sitting, stood, lines, ex, ey, hp = state
     ex, ey, loss = move_enemy(ex, ey, px, py)
-    hp -= loss
-    return px, py, angle, sitting, stood, lines, ex, ey, hp
+    return px, py, angle, sitting, stood, lines, ex, ey, hp - loss
 
 
 def goal(state, own):
     px, py, _, sitting, stood, lines, _, _, hp = state
-    return (
-        sitting
-        and stood
-        and (px, py) == own
-        and lines >= frozenset({"y", "o", "g"})
-        and hp > 0
-    )
+    return sitting and stood and (px, py) == own and lines >= frozenset({"y", "o", "g"}) and hp > 0
 
 
 def commands_list(diagonal_skill):
-    base = ["встать", "идти", "повернуть_90", "повернуть_-90", "повернуть_180", "сесть"]
     if diagonal_skill:
         return ["встать", "идти", "идти_диагональ", "повернуть_90", "повернуть_-90", "повернуть_180", "сесть"]
-    return base
+    return ["встать", "идти", "повернуть_90", "повернуть_-90", "повернуть_180", "сесть"]
 
 
-def bfs(seed: int, diagonal_skill=True, max_len=120):
+def bfs(seed: int, diagonal_skill=True, max_len=180):
     spawn, own, partner, enemy, angle = build_level3(seed)
     start = (spawn[0], spawn[1], angle, False, False, frozenset(), enemy[0], enemy[1], 3)
     cmds = commands_list(diagonal_skill)
@@ -196,18 +236,10 @@ def bfs(seed: int, diagonal_skill=True, max_len=120):
 
 
 if __name__ == "__main__":
-    for seed in [42, 100, 1, 7, 123, 200]:
-        path, spawn, own, partner, enemy, angle = bfs(seed, diagonal_skill=True, max_len=150)
-        if path:
-            print(f"seed={seed} FOUND {len(path)} cmds")
-            print(f"  spawn={spawn} own={own} partner={partner} enemy={enemy} angle={angle}")
-            if seed == 42:
-                p = Path(__file__).resolve().parent.parent / "docs" / "demo-level3-try-seed42.json"
-                p.write_text(
-                    json.dumps({"seed": seed, "commands": path}, ensure_ascii=False, indent=2),
-                    encoding="utf-8",
-                )
-                print(f"  saved {p}")
-            break
-    else:
-        print("NOT FOUND for tested seeds")
+    for seed in [100, 42, 1, 7, 123, 200, 300]:
+        path, spawn, own, partner, enemy, angle = bfs(seed, True, 180)
+        print(f"seed={seed} scene spawn={spawn} own={own} partner={partner} enemy={enemy} angle={angle} -> {len(path) if path else 'FAIL'}")
+        if path and seed == 7:
+            out = Path(__file__).resolve().parent.parent / "docs" / "demo-level3-try-seed7.json"
+            out.write_text(json.dumps({"seed": seed, "commands": path}, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"  saved {len(path)} commands to {out.name}")
