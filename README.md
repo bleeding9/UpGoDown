@@ -1,6 +1,6 @@
 # UpGoDown — API игры «обход стула»
 
-Клиент-серверное API (ASP.NET Core 8, PostgreSQL, Docker, Serilog → Seq, JWT). Swagger — единственный «UI».
+Клиент-серверное API (ASP.NET Core 8, PostgreSQL, Docker, Serilog → Seq, JWT). Тестирование: **Swagger** и **Postman**.
 
 ## Структура
 
@@ -13,6 +13,8 @@ UpGoDown/
   ЗАПУСК_DOCKER.bat
   docs/
     API.md
+    POSTMAN.md
+    UpGoDown.postman_collection.json
     demo-level1-try.json    ← готовый body для успешного прохождения уровня 1
   src/UpGoDown.Api/
 ```
@@ -42,6 +44,7 @@ docker compose up --build
 | Сервис     | URL |
 |------------|-----|
 | Swagger    | http://localhost:5000/swagger |
+| Postman    | импорт `docs/UpGoDown.postman_collection.json` — см. [POSTMAN.md](docs/POSTMAN.md) |
 | Seq (логи) | http://localhost:5341 |
 | Keycloak   | http://localhost:8180 (admin / admin) |
 | PostgreSQL | localhost:5432, user/pass/db = `upgodown` |

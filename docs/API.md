@@ -33,3 +33,7 @@
 
 Готовый JSON для **POST /levels/1/try**: см. [`demo-level1-try.json`](demo-level1-try.json)  
 Ожидаемый ответ: `"success": true`, `"stepsCount": 26`.
+
+## Postman
+
+Коллекция: [`UpGoDown.postman_collection.json`](UpGoDown.postman_collection.json) — инструкция в [`POSTMAN.md`](POSTMAN.md).

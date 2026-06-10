@@ -1,0 +1,165 @@
+{
+  "info": {
+    "_postman_id": "upgodown-api-collection",
+    "name": "UpGoDown API",
+    "description": "API игры «обход стула». Сначала Register или Login — token сохранится автоматически.\n\nSwagger: http://localhost:5000/swagger",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 — Auth",
+      "item": [
+        {
+          "name": "POST Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"demo\",\n  \"password\": \"123456\",\n  \"name\": \"Демо\"\n}"
+            },
+            "url": "{{baseUrl}}/register"
+          }
+        },
+        {
+          "name": "POST Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"demo\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": "{{baseUrl}}/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 — Levels",
+      "item": [
+        {
+          "name": "GET Levels",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/levels"
+          }
+        },
+        {
+          "name": "GET Level 1",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/levels/1"
+          }
+        },
+        {
+          "name": "POST Level 1 Try (demo)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gridWidth\": 14,\n  \"gridHeight\": 8,\n  \"chairOwn\": [2, 4],\n  \"chairPartner\": [9, 4],\n  \"commands\": [\n    \"встать\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\",\n    \"повернуть_90\", \"идти\", \"повернуть_90\", \"идти\", \"повернуть_90\", \"идти\", \"идти\",\n    \"повернуть_-90\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\",\n    \"повернуть_-90\", \"идти\", \"сесть\"\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/levels/1/try"
+          }
+        },
+        {
+          "name": "POST Level 3 Try (seed)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seed\": 42,\n  \"commands\": [\"идти\", \"повернуть_90\", \"идти\"]\n}"
+            },
+            "url": "{{baseUrl}}/levels/3/try"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 — Profile & Leaderboard",
+      "item": [
+        {
+          "name": "GET My Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/myProfile"
+          }
+        },
+        {
+          "name": "GET Leaderboard Level 1",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/leaderboard/levels/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 — Health",
+      "item": [
+        {
+          "name": "GET Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/health"
+          }
+        }
+      ]
+    }
+  ]
+}
