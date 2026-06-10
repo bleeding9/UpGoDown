@@ -1,0 +1,8 @@
+# Использовать, если docker build падает на dotnet restore (NU1301 / nuget.org).
+# Сначала: dotnet publish ... -o publish
+# Потом:   docker compose -f docker-compose.yml -f docker-compose.prebuilt.yml up --build -d
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.prebuilt
