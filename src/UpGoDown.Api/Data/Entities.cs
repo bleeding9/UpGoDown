@@ -5,9 +5,16 @@ public sealed class AppUser
     public Guid Id { get; set; }
     public string Login { get; set; } = "";
     public string Name { get; set; } = "";
+    public string Role { get; set; } = UserRoles.Student;
     public string PasswordHash { get; set; } = "";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public ICollection<LevelAttempt> Attempts { get; set; } = new List<LevelAttempt>();
+}
+
+public static class UserRoles
+{
+    public const string Student = "Student";
+    public const string Teacher = "Teacher";
 }
 
 public sealed class LevelAttempt

@@ -70,10 +70,21 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+    db.Database.Migrate();
+    var auth = scope.ServiceProvider.GetRequiredService<AuthService>();
+    await DbSeeder.SeedAsync(db, auth);
 }
 
-app.UseSerilogRequestLogging();
+app.Use(async (ctx, next) =>
+{
+    using (Serilog.Context.LogContext.PushProperty("TraceId", ctx.TraceIdentifier))
+        await next();
+});
+
+app.UseSerilogRequestLogging(opt =>
+{
+    opt.EnrichDiagnosticContext = (diag, ctx) => diag.Set("TraceId", ctx.TraceIdentifier);
+});
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>

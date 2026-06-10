@@ -19,11 +19,16 @@ public sealed class AuthService(AppDbContext db, IConfiguration config)
         if (await db.Users.AnyAsync(u => u.Login == login))
             return (false, "Пользователь уже существует", null);
 
+        var role = string.IsNullOrWhiteSpace(request.Role) ? UserRoles.Student : request.Role.Trim();
+        if (role is not (UserRoles.Student or UserRoles.Teacher))
+            return (false, "Role: Student или Teacher", null);
+
         var user = new AppUser
         {
             Id = Guid.NewGuid(),
             Login = login,
             Name = string.IsNullOrWhiteSpace(request.Name) ? login : request.Name.Trim(),
+            Role = role,
             PasswordHash = HashPassword(request.Password),
         };
         db.Users.Add(user);
@@ -50,11 +55,15 @@ public sealed class AuthService(AppDbContext db, IConfiguration config)
         return Guid.TryParse(id, out var guid) ? guid : null;
     }
 
+    public string? GetUserRole(ClaimsPrincipal user) =>
+        user.FindFirstValue(ClaimTypes.Role);
+
     private AuthResponse BuildAuthResponse(AppUser user) => new()
     {
         Token = CreateToken(user),
         Name = user.Name,
         Login = user.Login,
+        Role = user.Role,
     };
 
     private string CreateToken(AppUser user)
@@ -65,6 +74,7 @@ public sealed class AuthService(AppDbContext db, IConfiguration config)
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Login),
+            new Claim(ClaimTypes.Role, user.Role),
             new Claim("display_name", user.Name),
         };
         var token = new JwtSecurityToken(
@@ -88,6 +98,7 @@ public sealed class RegisterRequest
     public string Login { get; set; } = "";
     public string Password { get; set; } = "";
     public string Name { get; set; } = "";
+    public string Role { get; set; } = UserRoles.Student;
 }
 
 public sealed class LoginRequest
@@ -101,4 +112,5 @@ public sealed class AuthResponse
     public string Token { get; set; } = "";
     public string Name { get; set; } = "";
     public string Login { get; set; } = "";
+    public string Role { get; set; } = "";
 }

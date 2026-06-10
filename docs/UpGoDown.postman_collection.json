@@ -11,10 +11,10 @@
   ],
   "item": [
     {
-      "name": "01 — Auth",
+      "name": "01 — Auth (Postman на защите)",
       "item": [
         {
-          "name": "POST Register",
+          "name": "POST Register Student",
           "event": [
             {
               "listen": "test",
@@ -34,13 +34,13 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"login\": \"demo\",\n  \"password\": \"123456\",\n  \"name\": \"Демо\"\n}"
+              "raw": "{\n  \"login\": \"student\",\n  \"password\": \"123456\",\n  \"name\": \"Студент Иван\",\n  \"role\": \"Student\"\n}"
             },
             "url": "{{baseUrl}}/register"
           }
         },
         {
-          "name": "POST Login",
+          "name": "POST Login Student",
           "event": [
             {
               "listen": "test",
@@ -60,7 +60,33 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"login\": \"demo\",\n  \"password\": \"123456\"\n}"
+              "raw": "{\n  \"login\": \"student\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": "{{baseUrl}}/login"
+          }
+        },
+        {
+          "name": "POST Login Teacher",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('token', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"teacher\",\n  \"password\": \"123456\"\n}"
             },
             "url": "{{baseUrl}}/login"
           }
@@ -68,7 +94,23 @@
       ]
     },
     {
-      "name": "02 — Levels",
+      "name": "02 — Teacher (Swagger или Postman)",
+      "item": [
+        {
+          "name": "GET Teacher Overview",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/teacher/overview"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 — Levels (Student, Swagger)",
       "item": [
         {
           "name": "GET Levels",
@@ -127,7 +169,7 @@
       ]
     },
     {
-      "name": "03 — Profile & Leaderboard",
+      "name": "04 — Profile & Leaderboard",
       "item": [
         {
           "name": "GET My Profile",
@@ -150,7 +192,7 @@
       ]
     },
     {
-      "name": "04 — Health",
+      "name": "05 — Health",
       "item": [
         {
           "name": "GET Health",

@@ -114,7 +114,7 @@ public class LevelsController(AppDbContext db, AuthService auth) : ControllerBas
     }
 
     [HttpPost("{id:int}/try")]
-    [Authorize]
+    [Authorize(Roles = UserRoles.Student)]
     public async Task<IActionResult> TryLevel(
         int id,
         [FromBody] TryLevelRequest? request,
@@ -214,6 +214,7 @@ public class MyProfileController(AppDbContext db, AuthService auth) : Controller
         {
             login = user.Login,
             name = user.Name,
+            role = user.Role,
             stats = new
             {
                 totalAttempts = user.Attempts.Count,
@@ -262,6 +263,37 @@ public class LeaderboardController(AppDbContext db) : ControllerBase
         });
 
         return Ok(ranked);
+    }
+}
+
+[ApiController]
+[Route("teacher")]
+[Authorize(Roles = UserRoles.Teacher)]
+public class TeacherController(AppDbContext db) : ControllerBase
+{
+    [HttpGet("overview")]
+    public async Task<IActionResult> Overview()
+    {
+        var students = await db.Users
+            .Where(u => u.Role == UserRoles.Student)
+            .Include(u => u.Attempts)
+            .OrderBy(u => u.Login)
+            .Select(u => new
+            {
+                u.Login,
+                u.Name,
+                attempts = u.Attempts.Count,
+                passedLevels = u.Attempts.Where(a => a.Success).Select(a => a.LevelId).Distinct().Count(),
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            role = UserRoles.Teacher,
+            studentsCount = students.Count,
+            totalAttempts = await db.LevelAttempts.CountAsync(),
+            students,
+        });
     }
 }
 

@@ -83,6 +83,10 @@ docker compose up --build
 
 Чеклист: Docker, Swagger, Seq, Keycloak — см. **[docs/DOPUSK-skreens.md](docs/DOPUSK-skreens.md)**
 
+## Полный пайплайн сдачи
+
+Пошаговый сценарий по требованиям преподавателя: **[docs/DEFENSE-PIPELINE.md](docs/DEFENSE-PIPELINE.md)**
+
 ## Git
 
 ```powershell

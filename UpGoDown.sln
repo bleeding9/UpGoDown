@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpGoDown.Api", "src\UpGoDown.Api\UpGoDown.Api.csproj", "{B7E8F1A2-3C4D-5E6F-7890-ABCDEF123456}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpGoDown.Api.Tests", "tests\UpGoDown.Api.Tests\UpGoDown.Api.Tests.csproj", "{C1D2E3F4-A5B6-7890-CDEF-123456789ABC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{B7E8F1A2-3C4D-5E6F-7890-ABCDEF123456}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7E8F1A2-3C4D-5E6F-7890-ABCDEF123456}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7E8F1A2-3C4D-5E6F-7890-ABCDEF123456}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1D2E3F4-A5B6-7890-CDEF-123456789ABC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1D2E3F4-A5B6-7890-CDEF-123456789ABC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1D2E3F4-A5B6-7890-CDEF-123456789ABC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1D2E3F4-A5B6-7890-CDEF-123456789ABC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
