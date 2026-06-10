@@ -6,7 +6,18 @@ public sealed class LevelScenarioService
     private static readonly int[] DefaultChairPartner = [9, 4];
     private static readonly int[] Angles = [0, 90, 180, 270];
 
-    public ScenarioBuildResult Build(int levelId, TryLevelRequest request)
+    public static readonly string[] BaseCommands =
+        ["встать", "идти", "повернуть_90", "повернуть_-90", "повернуть_180", "сесть"];
+
+    public static readonly string DiagonalCommand = "идти_диагональ";
+
+    public static IReadOnlyList<string> AllowedCommands(bool hasDiagonalSkill)
+    {
+        if (!hasDiagonalSkill) return BaseCommands;
+        return [..BaseCommands.Take(2), DiagonalCommand, ..BaseCommands.Skip(2)];
+    }
+
+    public ScenarioBuildResult Build(int levelId, TryLevelRequest request, bool hasDiagonalSkill)
     {
         var w = request.GridWidth is > 0 ? request.GridWidth : 14;
         var h = request.GridHeight is > 0 ? request.GridHeight : 8;
@@ -15,8 +26,8 @@ public sealed class LevelScenarioService
         return levelId switch
         {
             1 => BuildLevel1(w, h, request),
-            2 => BuildLevel2(w, h, request, rng),
-            3 => BuildLevel3(w, h, request, rng),
+            2 => BuildLevel2(w, h, request, rng, hasDiagonalSkill),
+            3 => BuildLevel3(w, h, request, rng, hasDiagonalSkill),
             _ => ScenarioBuildResult.Failure("Неизвестный уровень"),
         };
     }
@@ -31,7 +42,7 @@ public sealed class LevelScenarioService
         var angle = GameEngine.AngleStandFromChair(w, h, own[0], own[1], partner[0], partner[1]);
         var scene = new SceneDto(w, h, own, partner,
             new ActorDto(own[0], own[1], angle, true),
-            "Уровень 1: актор на своём стуле");
+            "Уровень 1: актор на своём стуле. За успех — скилл «ход по диагонали».");
 
         var input = new SimulationInput
         {
@@ -45,12 +56,14 @@ public sealed class LevelScenarioService
             SpawnY = own[1],
             SpawnAngle = angle,
             SittingAtStart = true,
+            LevelId = 1,
+            DiagonalSkillEnabled = false,
             Commands = request.Commands,
         };
         return ScenarioBuildResult.Success(scene, input);
     }
 
-    private static ScenarioBuildResult BuildLevel2(int w, int h, TryLevelRequest request, Random rng)
+    private static ScenarioBuildResult BuildLevel2(int w, int h, TryLevelRequest request, Random rng, bool hasDiagonalSkill)
     {
         var own = Coords(request.ChairOwn, DefaultChairOwn);
         var partner = Coords(request.ChairPartner, DefaultChairPartner);
@@ -63,7 +76,9 @@ public sealed class LevelScenarioService
 
         var scene = new SceneDto(w, h, own, partner,
             new ActorDto(spawn.Item1, spawn.Item2, angle, false),
-            $"Уровень 2: случайный спавн ({spawn.Item1}, {spawn.Item2}), угол {angle}°");
+            hasDiagonalSkill
+                ? $"Уровень 2: случайный спавн ({spawn.Item1}, {spawn.Item2}). Доступен скилл: {DiagonalCommand}."
+                : $"Уровень 2: случайный спавн ({spawn.Item1}, {spawn.Item2}), угол {angle}°");
 
         return ScenarioBuildResult.Success(scene, new SimulationInput
         {
@@ -77,11 +92,13 @@ public sealed class LevelScenarioService
             SpawnY = spawn.Item2,
             SpawnAngle = angle,
             SittingAtStart = false,
+            LevelId = 2,
+            DiagonalSkillEnabled = hasDiagonalSkill,
             Commands = request.Commands,
         });
     }
 
-    private static ScenarioBuildResult BuildLevel3(int w, int h, TryLevelRequest request, Random rng)
+    private static ScenarioBuildResult BuildLevel3(int w, int h, TryLevelRequest request, Random rng, bool hasDiagonalSkill)
     {
         for (var attempt = 0; attempt < 400; attempt++)
         {
@@ -90,17 +107,21 @@ public sealed class LevelScenarioService
                 for (var y = 0; y < h; y++)
                     cells.Add((x, y));
             Shuffle(cells, rng);
-            if (cells.Count < 3) return ScenarioBuildResult.Failure("Поле слишком мало");
+            if (cells.Count < 4) return ScenarioBuildResult.Failure("Поле слишком мало");
 
             var spawn = cells[0];
             var c1 = cells[1];
             var c2 = cells[2];
+            var enemySpawn = cells[3];
             var (own, partner) = NearestChair(spawn, c1, c2);
             var angle = Angles[rng.Next(Angles.Length)];
 
             var scene = new SceneDto(w, h, [own.X, own.Y], [partner.X, partner.Y],
                 new ActorDto(spawn.X, spawn.Y, angle, false),
-                $"Уровень 3: актор ({spawn.X},{spawn.Y}), свой стул [{own.X},{own.Y}], партнёр [{partner.X},{partner.Y}]");
+                $"Уровень 3: актор ({spawn.X},{spawn.Y}), враг ({enemySpawn.X},{enemySpawn.Y}), HP=3. Враг идёт к вам; совпадение клетки −1 HP.",
+                new ActorDto(enemySpawn.X, enemySpawn.Y, 0, false),
+                ActorHp: 3,
+                MaxActorHp: 3);
 
             return ScenarioBuildResult.Success(scene, new SimulationInput
             {
@@ -114,6 +135,11 @@ public sealed class LevelScenarioService
                 SpawnY = spawn.Y,
                 SpawnAngle = angle,
                 SittingAtStart = false,
+                LevelId = 3,
+                DiagonalSkillEnabled = hasDiagonalSkill,
+                EnemySpawnX = enemySpawn.X,
+                EnemySpawnY = enemySpawn.Y,
+                ActorHp = 3,
                 Commands = request.Commands,
             });
         }

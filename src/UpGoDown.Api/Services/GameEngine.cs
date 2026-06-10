@@ -13,7 +13,16 @@ public sealed class GameEngine
         var commands = input.Commands ?? [];
 
         var actor = new ActorState(input.SpawnX, input.SpawnY, input.SpawnAngle);
-        var state = new EngineState(w, h, chairOwn, chairPartner, input.SittingAtStart);
+        var state = new EngineState(w, h, chairOwn, chairPartner, input.SittingAtStart)
+        {
+            DiagonalSkillEnabled = input.DiagonalSkillEnabled,
+            LevelId = input.LevelId,
+            ActorHp = input.LevelId == 3 ? input.ActorHp : 0,
+        };
+
+        if (input.LevelId == 3 && input.EnemySpawnX is int ex && input.EnemySpawnY is int ey)
+            state.Enemy = new ActorState(ex, ey, 0);
+
         state.Path.Add((actor.X, actor.Y));
         state.History.Add((actor.X, actor.Y));
 
@@ -23,11 +32,15 @@ public sealed class GameEngine
             if (state.HasError)
                 return BuildResult(false, state, actor, "Ошибка выполнения команд");
 
+            if (state.LevelId == 3 && state.ActorHp <= 0)
+                return BuildResult(false, state, actor, "Актор побеждён — HP = 0");
+
             if (index >= commands.Count)
             {
                 var ok = state.StoodUp && state.Sitting
                     && actor.X == chairOwn.Item1 && actor.Y == chairOwn.Item2
-                    && state.LineYellow && state.LineOrange && state.LineGreen;
+                    && state.LineYellow && state.LineOrange && state.LineGreen
+                    && (state.LevelId != 3 || state.ActorHp > 0);
                 return BuildResult(ok, state, actor, ok ? null : "Условия успеха не выполнены");
             }
 
@@ -35,6 +48,13 @@ public sealed class GameEngine
             var step = ExecuteCommand(cmd, actor, state, chairOwn);
             if (step == StepResult.Error)
                 return BuildResult(false, state, actor, $"Ошибка на команде: {cmd}");
+
+            if (state.LevelId == 3 && state.Enemy is not null)
+            {
+                MoveEnemy(state, actor);
+                if (state.ActorHp <= 0)
+                    return BuildResult(false, state, actor, "Актор побеждён — HP = 0");
+            }
         }
     }
 
@@ -47,6 +67,11 @@ public sealed class GameEngine
             Error = error,
             Lines = new LineFlags(state.LineYellow, state.LineOrange, state.LineGreen),
             FinalActor = new ActorDto(actor.X, actor.Y, actor.Angle, state.Sitting),
+            FinalEnemy = state.Enemy is null
+                ? null
+                : new ActorDto(state.Enemy.X, state.Enemy.Y, state.Enemy.Angle, false),
+            ActorHp = state.LevelId == 3 ? state.ActorHp : null,
+            MaxActorHp = state.LevelId == 3 ? 3 : null,
         };
 
     private static StepResult ExecuteCommand(string cmd, ActorState actor, EngineState state, (int X, int Y) chairOwn)
@@ -54,7 +79,8 @@ public sealed class GameEngine
         return cmd switch
         {
             "встать" => StandUp(actor, state),
-            "идти" => StepForward(actor, state) ? StepResult.Wait : StepResult.Error,
+            "идти" => StepForward(actor, state, diagonal: false) ? StepResult.Wait : StepResult.Error,
+            "идти_диагональ" => StepDiagonal(actor, state),
             "повернуть_90" => Turn(actor, state, 90),
             "повернуть_-90" => Turn(actor, state, -90),
             "повернуть_180" => Turn(actor, state, 180),
@@ -63,12 +89,18 @@ public sealed class GameEngine
         };
     }
 
+    private static StepResult StepDiagonal(ActorState actor, EngineState state)
+    {
+        if (!state.DiagonalSkillEnabled) return Error(state);
+        return StepForward(actor, state, diagonal: true) ? StepResult.Wait : StepResult.Error;
+    }
+
     private static StepResult StandUp(ActorState actor, EngineState state)
     {
         if (!state.Sitting) return Error(state);
         state.Sitting = false;
         state.StoodUp = true;
-        return StepForward(actor, state) ? StepResult.Wait : StepResult.Error;
+        return StepForward(actor, state, diagonal: false) ? StepResult.Wait : StepResult.Error;
     }
 
     private static StepResult SitDown(ActorState actor, EngineState state, (int X, int Y) chairOwn)
@@ -86,9 +118,9 @@ public sealed class GameEngine
         return StepResult.Wait;
     }
 
-    private static bool StepForward(ActorState actor, EngineState state)
+    private static bool StepForward(ActorState actor, EngineState state, bool diagonal)
     {
-        var (dx, dy) = Delta(actor.Angle);
+        var (dx, dy) = diagonal ? DiagonalDelta(actor.Angle) : Delta(actor.Angle);
         var nx = actor.X + dx;
         var ny = actor.Y + dy;
         if (nx < 0 || nx >= state.Width || ny < 0 || ny >= state.Height)
@@ -104,6 +136,45 @@ public sealed class GameEngine
         state.CommandSteps++;
         return true;
     }
+
+    private static void MoveEnemy(EngineState state, ActorState player)
+    {
+        var enemy = state.Enemy!;
+        var prev = (enemy.X, enemy.Y);
+        var best = prev;
+        var bestDist = Manhattan(enemy, player);
+
+        foreach (var (nx, ny) in Neighbors4(enemy.X, enemy.Y))
+        {
+            if (nx < 0 || nx >= state.Width || ny < 0 || ny >= state.Height) continue;
+            var dist = Math.Abs(nx - player.X) + Math.Abs(ny - player.Y);
+            if (dist < bestDist || (dist == bestDist && CompareCell((nx, ny), best) < 0))
+            {
+                bestDist = dist;
+                best = (nx, ny);
+            }
+        }
+
+        enemy.X = best.X;
+        enemy.Y = best.Y;
+
+        if (enemy.X == player.X && enemy.Y == player.Y && (prev.X != enemy.X || prev.Y != enemy.Y))
+            state.ActorHp--;
+    }
+
+    private static IEnumerable<(int X, int Y)> Neighbors4(int x, int y)
+    {
+        yield return (x + 1, y);
+        yield return (x - 1, y);
+        yield return (x, y + 1);
+        yield return (x, y - 1);
+    }
+
+    private static int Manhattan(ActorState a, ActorState b) =>
+        Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
+
+    private static int CompareCell((int X, int Y) a, (int X, int Y) b) =>
+        a.X != b.X ? a.X.CompareTo(b.X) : a.Y.CompareTo(b.Y);
 
     private static void MarkTour(EngineState state, int x, int y)
     {
@@ -133,9 +204,8 @@ public sealed class GameEngine
         return 0;
     }
 
-    private static (int Dx, int Dy) Delta(int angle)
-    {
-        return NormAngle(angle) switch
+    private static (int Dx, int Dy) Delta(int angle) =>
+        NormAngle(angle) switch
         {
             0 => (1, 0),
             90 => (0, 1),
@@ -143,6 +213,12 @@ public sealed class GameEngine
             270 => (0, -1),
             _ => (0, 0),
         };
+
+    private static (int Dx, int Dy) DiagonalDelta(int angle)
+    {
+        var (fx, fy) = Delta(angle);
+        var (px, py) = Delta(NormAngle(angle + 90));
+        return (fx + px, fy + py);
     }
 
     private static int NormAngle(int a) => ((a % 360) + 360) % 360;
@@ -167,6 +243,10 @@ public sealed class GameEngine
         public bool LineGreen { get; set; }
         public bool HasError { get; set; }
         public int CommandSteps { get; set; }
+        public bool DiagonalSkillEnabled { get; init; }
+        public int LevelId { get; init; }
+        public int ActorHp { get; set; } = 3;
+        public ActorState? Enemy { get; set; }
         public HashSet<(int X, int Y)> Path { get; } = [];
         public List<(int X, int Y)> History { get; } = [];
     }
@@ -184,6 +264,11 @@ public sealed class SimulationInput
     public int SpawnY { get; init; }
     public int SpawnAngle { get; init; }
     public bool SittingAtStart { get; init; }
+    public int LevelId { get; init; }
+    public bool DiagonalSkillEnabled { get; init; }
+    public int? EnemySpawnX { get; init; }
+    public int? EnemySpawnY { get; init; }
+    public int ActorHp { get; init; } = 3;
     public List<string>? Commands { get; init; }
 }
 
@@ -195,6 +280,9 @@ public sealed class SimulationResult
     public string? Error { get; init; }
     public LineFlags? Lines { get; init; }
     public ActorDto? FinalActor { get; init; }
+    public ActorDto? FinalEnemy { get; init; }
+    public int? ActorHp { get; init; }
+    public int? MaxActorHp { get; init; }
 }
 
 public sealed record LineFlags(bool Yellow, bool Orange, bool Green);
@@ -205,4 +293,7 @@ public sealed record SceneDto(
     int[] ChairOwn,
     int[] ChairPartner,
     ActorDto Actor,
-    string Description);
+    string Description,
+    ActorDto? Enemy = null,
+    int? ActorHp = null,
+    int? MaxActorHp = null);
