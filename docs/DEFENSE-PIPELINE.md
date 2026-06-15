@@ -57,7 +57,7 @@ docker ps
 
 Открыть **`docs/dbeaver-demo.sql`** — выполнить запросы по очереди.
 
-Показать: пользователи `student`, `teacher`, попытки после игры.
+Показать: пользователь `player`, попытки после игры.
 
 ---
 
@@ -67,16 +67,9 @@ docker ps
 
 ### Студент (Postman — обязательно по требованию)
 
-1. **POST Register Student** (или Login Student)  
-   `{ "login": "student", "password": "123456", "name": "Студент", "role": "Student" }`
-2. **POST Login Student** → token
-
-### Преподаватель (Postman)
-
-3. **POST Login Teacher**  
-   `{ "login": "teacher", "password": "123456" }`
-
-**Скрин:** Postman с Login и JSON-ответом `{ token, role }`.
+1. **POST Register** — `{ "login": "player", "password": "123456", "name": "Игрок", "role": "Student" }`  
+   (или сразу Login, если пользователь уже в БД)
+2. **POST Login** → `{ "token", "role" }`
 
 ---
 

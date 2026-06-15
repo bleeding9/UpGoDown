@@ -11,18 +11,10 @@ public static class DbSeeder
 
         await auth.RegisterAsync(new RegisterRequest
         {
-            Login = "student",
+            Login = "player",
             Password = "123456",
-            Name = "Студент Иван",
+            Name = "Игрок",
             Role = UserRoles.Student,
-        });
-
-        await auth.RegisterAsync(new RegisterRequest
-        {
-            Login = "teacher",
-            Password = "123456",
-            Name = "Преподаватель",
-            Role = UserRoles.Teacher,
         });
     }
 }

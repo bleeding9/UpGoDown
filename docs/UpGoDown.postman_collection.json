@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "upgodown-api-collection",
     "name": "UpGoDown API",
-    "description": "Postman — только register и login (требование защиты).\n\nОстальное: Swagger http://localhost:5000/swagger",
+    "description": "Коллекция UpGoDown. Один пользователь: login `player`, password `123456`.\n\nAuth — Postman. Уровни и профиль — Postman или Swagger http://localhost:5000/swagger",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -11,10 +11,10 @@
   ],
   "item": [
     {
-      "name": "Auth (Postman на защите)",
+      "name": "01 — Auth",
       "item": [
         {
-          "name": "POST Register (новый пользователь)",
+          "name": "POST Register",
           "event": [
             {
               "listen": "test",
@@ -34,13 +34,13 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"login\": \"demo1\",\n  \"password\": \"123456\",\n  \"name\": \"Демо студент\",\n  \"role\": \"Student\"\n}"
+              "raw": "{\n  \"login\": \"player\",\n  \"password\": \"123456\",\n  \"name\": \"Игрок\",\n  \"role\": \"Student\"\n}"
             },
             "url": "{{baseUrl}}/register"
           }
         },
         {
-          "name": "POST Login Student",
+          "name": "POST Login",
           "event": [
             {
               "listen": "test",
@@ -60,35 +60,135 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"login\": \"student\",\n  \"password\": \"123456\"\n}"
+              "raw": "{\n  \"login\": \"player\",\n  \"password\": \"123456\"\n}"
             },
             "url": "{{baseUrl}}/login"
           }
+        }
+      ]
+    },
+    {
+      "name": "02 — Levels (5 уровней)",
+      "item": [
+        {
+          "name": "GET Levels",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/levels"
+          }
         },
         {
-          "name": "POST Login Teacher",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var json = pm.response.json();",
-                  "    pm.collectionVariables.set('token', json.token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "POST Level 1 Try (demo)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"login\": \"teacher\",\n  \"password\": \"123456\"\n}"
+              "raw": "{\n  \"gridWidth\": 14,\n  \"gridHeight\": 8,\n  \"chairOwn\": [2, 4],\n  \"chairPartner\": [9, 4],\n  \"commands\": [\n    \"встать\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\",\n    \"повернуть_90\", \"идти\", \"повернуть_90\", \"идти\", \"повернуть_90\", \"идти\", \"идти\",\n    \"повернуть_-90\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\",\n    \"повернуть_-90\", \"идти\", \"сесть\"\n  ]\n}"
             },
-            "url": "{{baseUrl}}/login"
+            "url": "{{baseUrl}}/levels/1/try"
+          }
+        },
+        {
+          "name": "POST Level 2 Try (seed)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seed\": 42,\n  \"commands\": []\n}"
+            },
+            "url": "{{baseUrl}}/levels/2/try"
+          }
+        },
+        {
+          "name": "POST Level 3 Try (seed)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seed\": 42,\n  \"commands\": []\n}"
+            },
+            "url": "{{baseUrl}}/levels/3/try"
+          }
+        },
+        {
+          "name": "POST Level 4 Try (seed)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seed\": 42,\n  \"commands\": []\n}"
+            },
+            "url": "{{baseUrl}}/levels/4/try"
+          }
+        },
+        {
+          "name": "POST Level 5 Try (seed, враг)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seed\": 42,\n  \"commands\": []\n}"
+            },
+            "url": "{{baseUrl}}/levels/5/try"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 — Profile & Leaderboard",
+      "item": [
+        {
+          "name": "GET My Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/myProfile"
+          }
+        },
+        {
+          "name": "GET Leaderboard Level 1",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/leaderboard/levels/1"
+          }
+        },
+        {
+          "name": "GET Leaderboard Level 5",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/leaderboard/levels/5"
           }
         }
       ]

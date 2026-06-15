@@ -1,28 +1,24 @@
 # Postman — UpGoDown API
 
-На защите **Postman только для register и login**. Остальные запросы — в **Swagger**: http://localhost:5000/swagger
+## Импорт
 
-## Импорт коллекции
+**Import** → `docs/UpGoDown.postman_collection.json`
 
-1. Установите [Postman](https://www.postman.com/downloads/)
-2. **Import** → **`docs/UpGoDown.postman_collection.json`**
-3. Запустите проект: `docker compose up -d` (или `ЗАПУСК_DOCKER_LOCAL.bat`)
+## Пользователь (один)
 
-## Сценарий на защите
+| Поле | Значение |
+|------|----------|
+| login | `player` |
+| password | `123456` |
 
-1. **POST Register** — login `demo1` (новый пользователь) → **201** + token  
-2. **POST Login Student** — `student` / `123456` → **200** + `"role": "Student"`  
-3. **POST Login Teacher** — `teacher` / `123456` → **200** + `"role": "Teacher"`  
+Создаётся сидером при старте API или через **POST Register**.
 
-Token сохраняется в переменную `token` — скопируйте в Swagger → **Authorize**.
+## Коллекция
 
-## Переменные
+**01 — Auth:** Register, Login  
+**02 — Levels:** GET levels + try для уровней 1–5 (ур. 1 — готовый demo)  
+**03 — Profile & Leaderboard**
 
-| Переменная | Значение |
-|------------|----------|
-| `baseUrl` | `http://localhost:5000` |
-| `token` | после Login/Register |
+Уровни проходятся **по порядку** (2 только после 1 и т.д.).
 
-## Скрин для допуска
-
-Postman: **POST Login** с ответом **200** и JSON `{ token, role }`.
+Swagger: http://localhost:5000/swagger
