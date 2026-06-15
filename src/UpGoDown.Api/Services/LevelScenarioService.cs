@@ -19,54 +19,63 @@ public sealed class LevelScenarioService
 
     public ScenarioBuildResult Build(int levelId, TryLevelRequest request, bool hasDiagonalSkill)
     {
-        var w = request.GridWidth is > 0 ? request.GridWidth : 14;
-        var h = request.GridHeight is > 0 ? request.GridHeight : 8;
         var rng = new Random(request.Seed ?? Environment.TickCount);
 
         return levelId switch
         {
-            1 => BuildLevel1(w, h, request),
-            2 => BuildLevel2(w, h, request, rng, hasDiagonalSkill),
-            3 => BuildLevel3(w, h, request, rng, hasDiagonalSkill),
+            1 => BuildLevel1(request),
+            2 => BuildLevel2(request, rng),
+            3 => BuildLevel3(request, rng),
+            4 => BuildLevel4(request, rng, hasDiagonalSkill),
+            5 => BuildLevel5(request, rng, hasDiagonalSkill),
             _ => ScenarioBuildResult.Failure("Неизвестный уровень"),
         };
     }
 
-    private static ScenarioBuildResult BuildLevel1(int w, int h, TryLevelRequest request)
+    /// <summary>Уровень 1: фиксированная карта и стулья, актор сидит на своём.</summary>
+    private static ScenarioBuildResult BuildLevel1(TryLevelRequest request)
     {
+        const int w = 14;
+        const int h = 8;
         var own = Coords(request.ChairOwn, DefaultChairOwn);
         var partner = Coords(request.ChairPartner, DefaultChairPartner);
         if (!ValidateChairs(w, h, own, partner, out var err))
             return ScenarioBuildResult.Failure(err!);
 
-        var angle = GameEngine.AngleStandFromChair(w, h, own[0], own[1], partner[0], partner[1]);
-        var scene = new SceneDto(w, h, own, partner,
-            new ActorDto(own[0], own[1], angle, true),
-            "Уровень 1: актор на своём стуле. За успех — скилл «ход по диагонали».");
-
-        var input = new SimulationInput
-        {
-            GridWidth = w,
-            GridHeight = h,
-            ChairOwnX = own[0],
-            ChairOwnY = own[1],
-            ChairPartnerX = partner[0],
-            ChairPartnerY = partner[1],
-            SpawnX = own[0],
-            SpawnY = own[1],
-            SpawnAngle = angle,
-            SittingAtStart = true,
-            LevelId = 1,
-            DiagonalSkillEnabled = false,
-            Commands = request.Commands,
-        };
-        return ScenarioBuildResult.Success(scene, input);
+        return BuildSittingOnOwn(w, h, own, partner, request.Commands, levelId: 1,
+            "Уровень 1: встать, обойти чужой стул, сесть на свой.");
     }
 
-    private static ScenarioBuildResult BuildLevel2(int w, int h, TryLevelRequest request, Random rng, bool hasDiagonalSkill)
+    /// <summary>Уровень 2: + случайные стулья.</summary>
+    private static ScenarioBuildResult BuildLevel2(TryLevelRequest request, Random rng)
     {
-        var own = Coords(request.ChairOwn, DefaultChairOwn);
-        var partner = Coords(request.ChairPartner, DefaultChairPartner);
+        const int w = 14;
+        const int h = 8;
+        var (own, partner) = RandomChairs(w, h, rng);
+        if (!ValidateChairs(w, h, own, partner, out var err))
+            return ScenarioBuildResult.Failure(err!);
+
+        return BuildSittingOnOwn(w, h, own, partner, request.Commands, levelId: 2,
+            $"Уровень 2: случайные стулья — свой ({own[0]},{own[1]}), чужой ({partner[0]},{partner[1]}).");
+    }
+
+    /// <summary>Уровень 3: + случайный размер карты.</summary>
+    private static ScenarioBuildResult BuildLevel3(TryLevelRequest request, Random rng)
+    {
+        var (w, h) = ResolveGrid(request, rng, randomize: true);
+        var (own, partner) = RandomChairs(w, h, rng);
+        if (!ValidateChairs(w, h, own, partner, out var err))
+            return ScenarioBuildResult.Failure(err!);
+
+        return BuildSittingOnOwn(w, h, own, partner, request.Commands, levelId: 3,
+            $"Уровень 3: карта {w}×{h}, случайные стулья. За успех — скилл «{DiagonalCommand}».");
+    }
+
+    /// <summary>Уровень 4: + случайный спавн актора.</summary>
+    private static ScenarioBuildResult BuildLevel4(TryLevelRequest request, Random rng, bool hasDiagonalSkill)
+    {
+        var (w, h) = ResolveGrid(request, rng, randomize: true);
+        var (own, partner) = RandomChairs(w, h, rng);
         if (!ValidateChairs(w, h, own, partner, out var err))
             return ScenarioBuildResult.Failure(err!);
 
@@ -77,8 +86,8 @@ public sealed class LevelScenarioService
         var scene = new SceneDto(w, h, own, partner,
             new ActorDto(spawn.Item1, spawn.Item2, angle, false),
             hasDiagonalSkill
-                ? $"Уровень 2: случайный спавн ({spawn.Item1}, {spawn.Item2}). Доступен скилл: {DiagonalCommand}."
-                : $"Уровень 2: случайный спавн ({spawn.Item1}, {spawn.Item2}), угол {angle}°");
+                ? $"Уровень 4: карта {w}×{h}, случайный спавн ({spawn.Item1},{spawn.Item2}), скилл {DiagonalCommand}."
+                : $"Уровень 4: карта {w}×{h}, случайный спавн ({spawn.Item1},{spawn.Item2}), угол {angle}°.");
 
         return ScenarioBuildResult.Success(scene, new SimulationInput
         {
@@ -92,22 +101,22 @@ public sealed class LevelScenarioService
             SpawnY = spawn.Item2,
             SpawnAngle = angle,
             SittingAtStart = false,
-            LevelId = 2,
+            LevelId = 4,
             DiagonalSkillEnabled = hasDiagonalSkill,
             Commands = request.Commands,
         });
     }
 
-    private static ScenarioBuildResult BuildLevel3(int w, int h, TryLevelRequest request, Random rng, bool hasDiagonalSkill)
+    /// <summary>Уровень 5: + враг, у актора 3 HP.</summary>
+    private static ScenarioBuildResult BuildLevel5(TryLevelRequest request, Random rng, bool hasDiagonalSkill)
     {
         for (var attempt = 0; attempt < 400; attempt++)
         {
-            var cells = new List<(int X, int Y)>();
-            for (var x = 0; x < w; x++)
-                for (var y = 0; y < h; y++)
-                    cells.Add((x, y));
+            var (w, h) = ResolveGrid(request, rng, randomize: true);
+            var cells = AllCells(w, h);
             Shuffle(cells, rng);
-            if (cells.Count < 4) return ScenarioBuildResult.Failure("Поле слишком мало");
+            if (cells.Count < 4)
+                return ScenarioBuildResult.Failure("Поле слишком мало для уровня с врагом");
 
             var spawn = cells[0];
             var c1 = cells[1];
@@ -118,7 +127,7 @@ public sealed class LevelScenarioService
 
             var scene = new SceneDto(w, h, [own.X, own.Y], [partner.X, partner.Y],
                 new ActorDto(spawn.X, spawn.Y, angle, false),
-                $"Уровень 3: актор ({spawn.X},{spawn.Y}), враг ({enemySpawn.X},{enemySpawn.Y}), HP=3. Враг идёт к вам; совпадение клетки −1 HP.",
+                $"Уровень 5: карта {w}×{h}, враг ({enemySpawn.X},{enemySpawn.Y}). У вас 3 HP — враг преследует; зашёл на вашу клетку → −1 HP.",
                 new ActorDto(enemySpawn.X, enemySpawn.Y, 0, false),
                 ActorHp: 3,
                 MaxActorHp: 3);
@@ -135,7 +144,7 @@ public sealed class LevelScenarioService
                 SpawnY = spawn.Y,
                 SpawnAngle = angle,
                 SittingAtStart = false,
-                LevelId = 3,
+                LevelId = 5,
                 DiagonalSkillEnabled = hasDiagonalSkill,
                 EnemySpawnX = enemySpawn.X,
                 EnemySpawnY = enemySpawn.Y,
@@ -143,11 +152,66 @@ public sealed class LevelScenarioService
                 Commands = request.Commands,
             });
         }
-        return ScenarioBuildResult.Failure("Не удалось сгенерировать сцену — смените seed или увеличьте поле");
+
+        return ScenarioBuildResult.Failure("Не удалось сгенерировать сцену — смените seed");
+    }
+
+    private static ScenarioBuildResult BuildSittingOnOwn(
+        int w, int h, int[] own, int[] partner, List<string>? commands, int levelId, string description)
+    {
+        var angle = GameEngine.AngleStandFromChair(w, h, own[0], own[1], partner[0], partner[1]);
+        var scene = new SceneDto(w, h, own, partner,
+            new ActorDto(own[0], own[1], angle, true), description);
+
+        return ScenarioBuildResult.Success(scene, new SimulationInput
+        {
+            GridWidth = w,
+            GridHeight = h,
+            ChairOwnX = own[0],
+            ChairOwnY = own[1],
+            ChairPartnerX = partner[0],
+            ChairPartnerY = partner[1],
+            SpawnX = own[0],
+            SpawnY = own[1],
+            SpawnAngle = angle,
+            SittingAtStart = true,
+            LevelId = levelId,
+            DiagonalSkillEnabled = false,
+            Commands = commands,
+        });
+    }
+
+    private static (int W, int H) ResolveGrid(TryLevelRequest request, Random rng, bool randomize)
+    {
+        if (!randomize && request.GridWidth > 0 && request.GridHeight > 0)
+            return (request.GridWidth, request.GridHeight);
+
+        if (request.GridWidth > 0 && request.GridHeight > 0 && request.Seed is not null)
+            return (request.GridWidth, request.GridHeight);
+
+        return (rng.Next(12, 17), rng.Next(6, 11));
     }
 
     private static int[] Coords(int[]? fromRequest, int[] defaults) =>
         fromRequest is { Length: 2 } ? fromRequest : defaults;
+
+    private static (int[] Own, int[] Partner) RandomChairs(int w, int h, Random rng)
+    {
+        var free = AllCells(w, h);
+        Shuffle(free, rng);
+        var a = free[0];
+        var b = free[1];
+        return ([a.X, a.Y], [b.X, b.Y]);
+    }
+
+    private static List<(int X, int Y)> AllCells(int w, int h)
+    {
+        var cells = new List<(int X, int Y)>(w * h);
+        for (var x = 0; x < w; x++)
+            for (var y = 0; y < h; y++)
+                cells.Add((x, y));
+        return cells;
+    }
 
     private static bool ValidateChairs(int w, int h, int[] own, int[] partner, out string? error)
     {

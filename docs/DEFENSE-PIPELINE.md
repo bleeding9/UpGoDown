@@ -82,21 +82,18 @@ docker ps
 
 ## 5. Swagger — сценарии ролей
 
-### Роль Student (игрок)
+### Swagger (Student token)
 
-Authorize → token **студента**
-
-1. GET `/levels`
+1. GET `/levels` — 5 уровней, `hasAccess` / `lockedReason`
 2. POST `/levels/1/try` — body из `docs/demo-level1-try.json` → `success: true`
-3. POST `/levels/3/try` — body из `docs/demo-level3-try-seed7.json`
+3. POST `/levels/2/try` … `/levels/5/try` — только после прохождения предыдущего
 4. GET `/myProfile`
 
-### Роль Teacher (преподаватель)
+> Скилл `идти_диагональ` открывается после **уровня 3**. Враг — только на **уровне 5**.
 
-Authorize → token **teacher**
+### Swagger (Teacher token)
 
-1. GET `/teacher/overview` — сводка по студентам
-2. GET `/leaderboard/levels/1` — топ
+1. GET `/leaderboard/levels/1` — топ (можно и без token)
 
 ---
 

@@ -94,22 +94,6 @@
       ]
     },
     {
-      "name": "02 — Teacher (Swagger или Postman)",
-      "item": [
-        {
-          "name": "GET Teacher Overview",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
-            },
-            "method": "GET",
-            "url": "{{baseUrl}}/teacher/overview"
-          }
-        }
-      ]
-    },
-    {
       "name": "03 — Levels (Student, Swagger)",
       "item": [
         {
@@ -121,17 +105,6 @@
             },
             "method": "GET",
             "url": "{{baseUrl}}/levels"
-          }
-        },
-        {
-          "name": "GET Level 1",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
-            },
-            "method": "GET",
-            "url": "{{baseUrl}}/levels/1"
           }
         },
         {
@@ -148,22 +121,6 @@
               "raw": "{\n  \"gridWidth\": 14,\n  \"gridHeight\": 8,\n  \"chairOwn\": [2, 4],\n  \"chairPartner\": [9, 4],\n  \"commands\": [\n    \"встать\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\",\n    \"повернуть_90\", \"идти\", \"повернуть_90\", \"идти\", \"повернуть_90\", \"идти\", \"идти\",\n    \"повернуть_-90\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\",\n    \"повернуть_-90\", \"идти\", \"сесть\"\n  ]\n}"
             },
             "url": "{{baseUrl}}/levels/1/try"
-          }
-        },
-        {
-          "name": "POST Level 3 Try (demo seed 7)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
-            },
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"seed\": 7,\n  \"commands\": [\n    \"повернуть_-90\", \"идти\", \"идти_диагональ\", \"сесть\", \"встать\",\n    \"идти_диагональ\", \"повернуть_-90\", \"идти_диагональ\", \"идти_диагональ\",\n    \"повернуть_-90\", \"идти_диагональ\", \"повернуть_-90\", \"идти_диагональ\",\n    \"идти_диагональ\", \"повернуть_90\", \"идти\", \"сесть\"\n  ]\n}"
-            },
-            "url": "{{baseUrl}}/levels/3/try"
           }
         }
       ]
@@ -187,18 +144,6 @@
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/leaderboard/levels/1"
-          }
-        }
-      ]
-    },
-    {
-      "name": "05 — Health",
-      "item": [
-        {
-          "name": "GET Health",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/health"
           }
         }
       ]

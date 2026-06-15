@@ -9,6 +9,12 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U upgodown -d upgodown"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
 
   seq:
     image: datalust/seq:latest
@@ -29,11 +35,14 @@ services:
 
   api:
     build: .
+    restart: unless-stopped
     ports:
       - "5000:8080"
     depends_on:
-      - postgres
-      - seq
+      postgres:
+        condition: service_healthy
+      seq:
+        condition: service_started
     environment:
       ConnectionStrings__Default: "Host=postgres;Port=5432;Database=upgodown;Username=upgodown;Password=upgodown"
       Seq__Url: "http://seq:80"

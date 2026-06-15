@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +9,8 @@ namespace UpGoDown.Api.Controllers;
 
 [ApiController]
 [Route("register")]
-public class RegisterController(AppDbContext db, AuthService auth) : ControllerBase
+[ApiExplorerSettings(IgnoreApi = true)]
+public class RegisterController(AuthService auth) : ControllerBase
 {
     [HttpPost]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
@@ -23,6 +23,7 @@ public class RegisterController(AppDbContext db, AuthService auth) : ControllerB
 
 [ApiController]
 [Route("login")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class LoginController(AuthService auth) : ControllerBase
 {
     [HttpPost]
@@ -40,9 +41,11 @@ public class LevelsController(AppDbContext db, AuthService auth) : ControllerBas
 {
     private static readonly (int Id, string Name, string Description)[] LevelMeta =
     [
-        (1, "На своём стуле", "Актор сидит на своём стуле. За успех — скилл «ход по диагонали»."),
-        (2, "Случайный спавн", "Стулья фиксированы, актор появляется случайно."),
-        (3, "Полный random + враг", "Случайные стулья и актор. Враг преследует вас. HP = 3."),
+        (1, "Базовый обход", "Фиксированная карта. Встать, обойти чужой стул, сесть на свой."),
+        (2, "Случайные стулья", "Стулья спавнятся случайно."),
+        (3, "Случайная карта", "Случайный размер поля + случайные стулья. За успех — скилл «идти_диагональ»."),
+        (4, "Случайный спавн", "Все условия ур. 3 + актор появляется в случайной клетке."),
+        (5, "Враг", "Все условия ур. 4 + враг преследует вас. HP = 3."),
     ];
 
     [HttpGet]
@@ -50,7 +53,26 @@ public class LevelsController(AppDbContext db, AuthService auth) : ControllerBas
     public async Task<IActionResult> GetAll()
     {
         var userId = auth.GetUserId(User);
-        var hasDiagonalSkill = userId is not null && await HasDiagonalSkillAsync(db, userId.Value);
+        if (userId is null) return Unauthorized();
+
+        var hasDiagonalSkill = await LevelProgressService.HasDiagonalSkillAsync(db, userId.Value);
+        var levels = new List<object>();
+
+        foreach (var l in LevelMeta)
+        {
+            var hasAccess = await LevelProgressService.CanAccessLevelAsync(db, userId.Value, l.Id);
+            var passed = await LevelProgressService.HasPassedLevelAsync(db, userId.Value, l.Id);
+            levels.Add(new
+            {
+                id = l.Id,
+                name = l.Name,
+                description = l.Description,
+                hasAccess,
+                passed,
+                lockedReason = hasAccess ? null : $"Сначала пройдите уровень {l.Id - 1}",
+                hasEnemy = l.Id == 5,
+            });
+        }
 
         return Ok(new
         {
@@ -59,57 +81,10 @@ public class LevelsController(AppDbContext db, AuthService auth) : ControllerBas
                 diagonalWalk = hasDiagonalSkill,
                 diagonalCommand = LevelScenarioService.DiagonalCommand,
                 description = hasDiagonalSkill
-                    ? "Открыт после прохождения уровня 1"
-                    : "Пройдите уровень 1",
+                    ? "Открыт после прохождения уровня 3"
+                    : "Пройдите уровень 3",
             },
-            levels = LevelMeta.Select(l => new
-            {
-                id = l.Id,
-                name = l.Name,
-                description = l.Description,
-                hasAccess = true,
-                hasEnemy = l.Id == 3,
-            }),
-        });
-    }
-
-    [HttpGet("{id:int}")]
-    [Authorize]
-    public async Task<IActionResult> GetById(int id)
-    {
-        if (id is < 1 or > 3) return NotFound(new { error = "Уровень не найден" });
-        var level = LevelMeta[id - 1];
-        var userId = auth.GetUserId(User);
-        var hasDiagonalSkill = userId is not null && await HasDiagonalSkillAsync(db, userId.Value);
-
-        return Ok(new
-        {
-            id,
-            name = level.Name,
-            description = level.Description,
-            gridWidth = 14,
-            gridHeight = 8,
-            stateMapExample = id == 1
-                ? new
-                {
-                    chairOwn = new[] { 2, 4 },
-                    chairPartner = new[] { 9, 4 },
-                    actor = new { x = 2, y = 4, angle = 0, sitting = true },
-                }
-                : id == 3
-                    ? (object)new
-                    {
-                        note = "Сцена с врагом генерируется при POST /levels/3/try",
-                        actorHp = 3,
-                        enemy = "случайный спавн, преследует игрока",
-                    }
-                    : new { note = "Сцена генерируется при POST /levels/{id}/try" },
-            allowedCommands = LevelScenarioService.AllowedCommands(hasDiagonalSkill),
-            skills = new
-            {
-                diagonalWalk = hasDiagonalSkill,
-                diagonalCommand = LevelScenarioService.DiagonalCommand,
-            },
+            levels,
         });
     }
 
@@ -124,6 +99,9 @@ public class LevelsController(AppDbContext db, AuthService auth) : ControllerBas
         [FromServices] AuthService authService)
     {
         request ??= new TryLevelRequest();
+        if (id is < 1 or > LevelProgressService.MaxLevel)
+            return NotFound(new { error = "Уровень не найден" });
+
         if (request.Commands is null || request.Commands.Count == 0)
             return BadRequest(new { error = "Укажите commands — список команд алгоритма" });
 
@@ -131,8 +109,11 @@ public class LevelsController(AppDbContext db, AuthService auth) : ControllerBas
         if (userId is null)
             return Unauthorized();
 
-        var hadDiagonalSkill = await HasDiagonalSkillAsync(dbContext, userId.Value);
-        var skillForRun = id != 1 && hadDiagonalSkill;
+        if (!await LevelProgressService.CanAccessLevelAsync(dbContext, userId.Value, id))
+            return BadRequest(new { error = $"Сначала пройдите уровень {id - 1}" });
+
+        var hadDiagonalSkill = await LevelProgressService.HasDiagonalSkillAsync(dbContext, userId.Value);
+        var skillForRun = hadDiagonalSkill && id >= 4;
 
         var build = scenarios.Build(id, request, skillForRun);
         if (!build.Ok)
@@ -153,7 +134,7 @@ public class LevelsController(AppDbContext db, AuthService auth) : ControllerBas
         dbContext.LevelAttempts.Add(attempt);
         await dbContext.SaveChangesAsync();
 
-        var skillGranted = id == 1 && result.Success && !hadDiagonalSkill;
+        var skillGranted = id == LevelProgressService.SkillUnlockLevel && result.Success && !hadDiagonalSkill;
 
         return Ok(new
         {
@@ -175,9 +156,6 @@ public class LevelsController(AppDbContext db, AuthService auth) : ControllerBas
             },
         });
     }
-
-    private static Task<bool> HasDiagonalSkillAsync(AppDbContext db, Guid userId) =>
-        db.LevelAttempts.AnyAsync(a => a.UserId == userId && a.LevelId == 1 && a.Success);
 }
 
 [ApiController]
@@ -196,7 +174,8 @@ public class MyProfileController(AppDbContext db, AuthService auth) : Controller
             .FirstOrDefaultAsync(u => u.Id == userId);
         if (user is null) return NotFound();
 
-        var hasDiagonalSkill = user.Attempts.Any(a => a.LevelId == 1 && a.Success);
+        var hasDiagonalSkill = user.Attempts.Any(a =>
+            a.LevelId == LevelProgressService.SkillUnlockLevel && a.Success);
 
         var levels = user.Attempts
             .GroupBy(a => a.LevelId)
@@ -225,7 +204,7 @@ public class MyProfileController(AppDbContext db, AuthService auth) : Controller
                 diagonalWalk = hasDiagonalSkill,
                 description = hasDiagonalSkill
                     ? "Ход по диагонали (команда «идти_диагональ»)"
-                    : "Пройдите уровень 1",
+                    : "Пройдите уровень 3",
             },
             levels,
         });
@@ -240,6 +219,9 @@ public class LeaderboardController(AppDbContext db) : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetForLevel(int levelId)
     {
+        if (levelId is < 1 or > LevelProgressService.MaxLevel)
+            return NotFound(new { error = "Уровень не найден" });
+
         var best = await db.LevelAttempts
             .Where(a => a.LevelId == levelId && a.Success)
             .Include(a => a.User)
@@ -269,6 +251,7 @@ public class LeaderboardController(AppDbContext db) : ControllerBase
 [ApiController]
 [Route("teacher")]
 [Authorize(Roles = UserRoles.Teacher)]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class TeacherController(AppDbContext db) : ControllerBase
 {
     [HttpGet("overview")]
@@ -299,6 +282,7 @@ public class TeacherController(AppDbContext db) : ControllerBase
 
 [ApiController]
 [Route("api/[controller]")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class HealthController : ControllerBase
 {
     [HttpGet]

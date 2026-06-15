@@ -17,10 +17,10 @@ public sealed class GameEngine
         {
             DiagonalSkillEnabled = input.DiagonalSkillEnabled,
             LevelId = input.LevelId,
-            ActorHp = input.LevelId == 3 ? input.ActorHp : 0,
+            ActorHp = input.LevelId == 5 ? input.ActorHp : 0,
         };
 
-        if (input.LevelId == 3 && input.EnemySpawnX is int ex && input.EnemySpawnY is int ey)
+        if (input.LevelId == 5 && input.EnemySpawnX is int ex && input.EnemySpawnY is int ey)
             state.Enemy = new ActorState(ex, ey, 0);
 
         state.Path.Add((actor.X, actor.Y));
@@ -32,7 +32,7 @@ public sealed class GameEngine
             if (state.HasError)
                 return BuildResult(false, state, actor, "Ошибка выполнения команд");
 
-            if (state.LevelId == 3 && state.ActorHp <= 0)
+            if (state.LevelId == 5 && state.ActorHp <= 0)
                 return BuildResult(false, state, actor, "Актор побеждён — HP = 0");
 
             if (index >= commands.Count)
@@ -40,7 +40,7 @@ public sealed class GameEngine
                 var ok = state.StoodUp && state.Sitting
                     && actor.X == chairOwn.Item1 && actor.Y == chairOwn.Item2
                     && state.LineYellow && state.LineOrange && state.LineGreen
-                    && (state.LevelId != 3 || state.ActorHp > 0);
+                    && (state.LevelId != 5 || state.ActorHp > 0);
                 return BuildResult(ok, state, actor, ok ? null : "Условия успеха не выполнены");
             }
 
@@ -49,7 +49,7 @@ public sealed class GameEngine
             if (step == StepResult.Error)
                 return BuildResult(false, state, actor, $"Ошибка на команде: {cmd}");
 
-            if (state.LevelId == 3 && state.Enemy is not null)
+            if (state.LevelId == 5 && state.Enemy is not null)
             {
                 MoveEnemy(state, actor);
                 if (state.ActorHp <= 0)
@@ -70,8 +70,8 @@ public sealed class GameEngine
             FinalEnemy = state.Enemy is null
                 ? null
                 : new ActorDto(state.Enemy.X, state.Enemy.Y, state.Enemy.Angle, false),
-            ActorHp = state.LevelId == 3 ? state.ActorHp : null,
-            MaxActorHp = state.LevelId == 3 ? 3 : null,
+            ActorHp = state.LevelId == 5 ? state.ActorHp : null,
+            MaxActorHp = state.LevelId == 5 ? 3 : null,
         };
 
     private static StepResult ExecuteCommand(string cmd, ActorState actor, EngineState state, (int X, int Y) chairOwn)
