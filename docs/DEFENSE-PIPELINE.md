@@ -78,11 +78,11 @@ docker ps
 ### Swagger (Student token)
 
 1. GET `/levels` — 5 уровней, `hasAccess` / `lockedReason`
-2. POST `/levels/1/try` — body из `docs/demo-level1-try.json` → `success: true`
-3. POST `/levels/2/try` … `/levels/5/try` — только после прохождения предыдущего
+2. POST `/levels/1/try` — body из `docs/demo-level1-try.json`
+3. POST `/levels/2/try` … `/levels/5/try` — body из `docs/demo-levelN-try-seed7.json` (по порядку!)
 4. GET `/myProfile`
 
-> Скилл `идти_диагональ` открывается после **уровня 3**. Враг — только на **уровне 5**.
+> Скилл `идти_диагональ` — после **уровня 3**. Враг и 3 HP — **уровень 5**. Все demo: **`docs/DEMO-BODIES.md`**
 
 ### Swagger (Teacher token)
 

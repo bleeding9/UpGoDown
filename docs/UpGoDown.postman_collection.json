@@ -6,8 +6,14 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:5000" },
-    { "key": "token", "value": "" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
   ],
   "item": [
     {
@@ -31,7 +37,12 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"login\": \"player\",\n  \"password\": \"123456\",\n  \"name\": \"Игрок\",\n  \"role\": \"Student\"\n}"
@@ -57,7 +68,12 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"login\": \"player\",\n  \"password\": \"123456\"\n}"
@@ -75,7 +91,13 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "url": "{{baseUrl}}/levels"
@@ -86,77 +108,132 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"gridWidth\": 14,\n  \"gridHeight\": 8,\n  \"chairOwn\": [2, 4],\n  \"chairPartner\": [9, 4],\n  \"commands\": [\n    \"встать\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\",\n    \"повернуть_90\", \"идти\", \"повернуть_90\", \"идти\", \"повернуть_90\", \"идти\", \"идти\",\n    \"повернуть_-90\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\", \"идти\",\n    \"повернуть_-90\", \"идти\", \"сесть\"\n  ]\n}"
+              "raw": "{\n  \"gridWidth\": 14,\n  \"gridHeight\": 8,\n  \"chairOwn\": [\n    2,\n    4\n  ],\n  \"chairPartner\": [\n    9,\n    4\n  ],\n  \"commands\": [\n    \"встать\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"повернуть_90\",\n    \"идти\",\n    \"повернуть_90\",\n    \"идти\",\n    \"повернуть_90\",\n    \"идти\",\n    \"идти\",\n    \"повернуть_-90\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"повернуть_-90\",\n    \"идти\",\n    \"сесть\"\n  ]\n}"
             },
             "url": "{{baseUrl}}/levels/1/try"
           }
         },
         {
-          "name": "POST Level 2 Try (seed)",
+          "name": "POST Level 2 Try (demo)",
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"seed\": 42,\n  \"commands\": []\n}"
+              "raw": "{\n  \"seed\": 7,\n  \"commands\": [\n    \"встать\",\n    \"повернуть_180\",\n    \"идти\",\n    \"идти\",\n    \"повернуть_-90\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"повернуть_-90\",\n    \"идти\",\n    \"повернуть_-90\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"сесть\"\n  ]\n}"
             },
             "url": "{{baseUrl}}/levels/2/try"
           }
         },
         {
-          "name": "POST Level 3 Try (seed)",
+          "name": "POST Level 3 Try (demo)",
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"seed\": 42,\n  \"commands\": []\n}"
+              "raw": "{\n  \"seed\": 7,\n  \"commands\": [\n    \"встать\",\n    \"повернуть_90\",\n    \"идти\",\n    \"идти\",\n    \"повернуть_90\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"повернуть_-90\",\n    \"идти\",\n    \"повернуть_180\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"повернуть_90\",\n    \"идти\",\n    \"идти\",\n    \"идти\",\n    \"сесть\"\n  ]\n}"
             },
             "url": "{{baseUrl}}/levels/3/try"
           }
         },
         {
-          "name": "POST Level 4 Try (seed)",
+          "name": "POST Level 4 Try (demo)",
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"seed\": 42,\n  \"commands\": []\n}"
+              "raw": "{\n  \"seed\": 7,\n  \"commands\": [\n    \"повернуть_180\",\n    \"идти_диагональ\",\n    \"идти_диагональ\",\n    \"повернуть_90\",\n    \"идти_диагональ\",\n    \"повернуть_90\",\n    \"идти_диагональ\",\n    \"повернуть_-90\",\n    \"идти_диагональ\",\n    \"идти_диагональ\",\n    \"сесть\",\n    \"встать\",\n    \"повернуть_180\",\n    \"идти\",\n    \"сесть\"\n  ]\n}"
             },
             "url": "{{baseUrl}}/levels/4/try"
           }
         },
         {
-          "name": "POST Level 5 Try (seed, враг)",
+          "name": "POST Level 5 Try (demo)",
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"seed\": 42,\n  \"commands\": []\n}"
+              "raw": "{\n  \"seed\": 7,\n  \"commands\": [\n    \"идти_диагональ\",\n    \"идти_диагональ\",\n    \"повернуть_90\",\n    \"идти\",\n    \"сесть\",\n    \"встать\",\n    \"идти\",\n    \"повернуть_-90\",\n    \"идти_диагональ\",\n    \"идти\",\n    \"идти\",\n    \"повернуть_180\",\n    \"идти_диагональ\",\n    \"идти_диагональ\",\n    \"идти_диагональ\",\n    \"сесть\"\n  ]\n}"
             },
             "url": "{{baseUrl}}/levels/5/try"
           }
@@ -171,7 +248,13 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "url": "{{baseUrl}}/myProfile"

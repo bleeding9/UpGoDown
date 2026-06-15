@@ -1,8 +1,14 @@
 {
   "gridWidth": 14,
   "gridHeight": 8,
-  "chairOwn": [2, 4],
-  "chairPartner": [9, 4],
+  "chairOwn": [
+    2,
+    4
+  ],
+  "chairPartner": [
+    9,
+    4
+  ],
   "commands": [
     "встать",
     "идти",
