@@ -67,7 +67,7 @@ docker ps
 
 ### Студент (Postman — обязательно по требованию)
 
-1. **POST Register** — `{ "login": "player", "password": "123456", "name": "Игрок", "role": "Student" }`  
+1. **POST Register** — `{ "login": "player", "password": "123456", "name": "Игрок" }`  
    (или сразу Login, если пользователь уже в БД)
 2. **POST Login** → `{ "token", "role" }`
 
