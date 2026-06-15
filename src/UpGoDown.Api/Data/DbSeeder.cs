@@ -14,7 +14,6 @@ public static class DbSeeder
             Login = "player",
             Password = "123456",
             Name = "Игрок",
-            Role = UserRoles.Student,
         });
     }
 }
