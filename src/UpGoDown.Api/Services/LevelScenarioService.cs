@@ -183,13 +183,13 @@ public sealed class LevelScenarioService
 
     private static (int W, int H) ResolveGrid(TryLevelRequest request, Random rng, bool randomize)
     {
-        if (!randomize && request.GridWidth > 0 && request.GridHeight > 0)
-            return (request.GridWidth, request.GridHeight);
+        if (randomize)
+            return (rng.Next(12, 17), rng.Next(6, 11));
 
-        if (request.GridWidth > 0 && request.GridHeight > 0 && request.Seed is not null)
-            return (request.GridWidth, request.GridHeight);
+        if (request.GridWidth is > 0 and var gw && request.GridHeight is > 0 and var gh)
+            return (gw, gh);
 
-        return (rng.Next(12, 17), rng.Next(6, 11));
+        return (14, 8);
     }
 
     private static int[] Coords(int[]? fromRequest, int[] defaults) =>
@@ -280,8 +280,8 @@ public sealed class ScenarioBuildResult
 
 public sealed class TryLevelRequest
 {
-    public int GridWidth { get; set; } = 14;
-    public int GridHeight { get; set; } = 8;
+    public int? GridWidth { get; set; }
+    public int? GridHeight { get; set; }
     public int[]? ChairOwn { get; set; }
     public int[]? ChairPartner { get; set; }
     public int? Seed { get; set; }

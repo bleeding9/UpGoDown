@@ -293,29 +293,61 @@ def bfs(w, h, own, partner, spawn, angle, sitting, diagonal, with_enemy, enemy=N
     return None
 
 
+def verify_path(level, seed, path, diagonal):
+    if level == 2:
+        w, h, own, partner, spawn, angle, sitting = build_level2(seed)
+        enemy = None
+        with_enemy = False
+    elif level == 3:
+        w, h, own, partner, spawn, angle, sitting = build_level3(seed)
+        enemy = None
+        with_enemy = False
+    elif level == 4:
+        w, h, own, partner, spawn, angle, sitting = build_level4(seed)
+        enemy = None
+        with_enemy = False
+    elif level == 5:
+        w, h, own, partner, spawn, angle, enemy = build_level5(seed)
+        sitting = False
+        with_enemy = True
+    else:
+        return False
+
+    if with_enemy:
+        state = (spawn[0], spawn[1], angle, sitting, False, frozenset(), enemy[0], enemy[1], 3)
+    else:
+        state = (spawn[0], spawn[1], angle, sitting, False, frozenset(), 0, 0, 3)
+
+    for cmd in path:
+        state = apply(cmd, state, own, partner, w, h, diagonal, with_enemy)
+        if state is None:
+            return False
+    return goal(state, own)
+
+
 def try_seed(seed):
     results = {}
     w, h, own, partner, spawn, angle, sitting = build_level2(seed)
     path = bfs(w, h, own, partner, spawn, angle, sitting, False, False)
-    if not path:
+    if not path or not verify_path(2, seed, path, False):
         return None
     results[2] = {"seed": seed, "commands": path}
 
     w, h, own, partner, spawn, angle, sitting = build_level3(seed)
     path = bfs(w, h, own, partner, spawn, angle, sitting, False, False)
-    if not path:
+    if not path or not verify_path(3, seed, path, False):
         return None
     results[3] = {"seed": seed, "commands": path}
 
     w, h, own, partner, spawn, angle, sitting = build_level4(seed)
     path = bfs(w, h, own, partner, spawn, angle, sitting, True, False, max_len=200)
-    if not path:
+    if not path or not verify_path(4, seed, path, True):
         return None
     results[4] = {"seed": seed, "commands": path}
 
     w, h, own, partner, spawn, angle, enemy = build_level5(seed)
     path = bfs(w, h, own, partner, spawn, angle, False, True, True, enemy, max_len=260)
-    if not path:
+    if not path or not verify_path(5, seed, path, True):
         return None
     results[5] = {"seed": seed, "commands": path}
     return results
