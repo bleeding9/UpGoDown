@@ -9,7 +9,6 @@ namespace UpGoDown.Api.Controllers;
 
 [ApiController]
 [Route("register")]
-[ApiExplorerSettings(IgnoreApi = true)]
 public class RegisterController(AuthService auth) : ControllerBase
 {
     [HttpPost]
@@ -23,7 +22,6 @@ public class RegisterController(AuthService auth) : ControllerBase
 
 [ApiController]
 [Route("login")]
-[ApiExplorerSettings(IgnoreApi = true)]
 public class LoginController(AuthService auth) : ControllerBase
 {
     [HttpPost]
